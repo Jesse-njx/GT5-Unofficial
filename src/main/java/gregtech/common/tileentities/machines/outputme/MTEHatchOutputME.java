@@ -30,6 +30,7 @@ import com.glodblock.github.common.item.ItemFluidVoidStorageCell;
 
 import appeng.api.AEApi;
 import appeng.api.config.Actionable;
+import appeng.api.exceptions.AppEngException;
 import appeng.api.implementations.IPowerChannelState;
 import appeng.api.networking.IGridNode;
 import appeng.api.networking.events.MENetworkChannelsChanged;
@@ -48,6 +49,8 @@ import appeng.helpers.IPriorityHost;
 import appeng.me.GridAccessException;
 import appeng.me.helpers.AENetworkProxy;
 import appeng.me.helpers.IGridProxyable;
+import appeng.me.storage.FluidCellInventory;
+import appeng.me.storage.FluidCellInventoryHandler;
 import appeng.util.item.AEFluidStack;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -552,10 +555,19 @@ public class MTEHatchOutputME extends MTEHatchOutput implements IPowerChannelSta
             this.isRecipeCheck = isRecipeCheck;
             if (isRecipeCheck && shouldCheckCell()) {
                 provider.flushCachedStack();
+                try {
+                    cell = new FluidCellInventoryHandler(new FluidCellInventory(getCellStack().copy(), $ -> {}) {
+
+                        @Override
+                        protected void saveChanges() {}
+                    });
+                } catch (AppEngException e) {
+                    // :p
+                }
                 cell = AEApi.instance()
                     .registries()
                     .cell()
-                    .getCellInventory(getCellStack().copy(), getISaveProvider(), getChannel());
+                    .getCellInventory(getCellStack().copy(), $ -> {}, getChannel());
             }
             updateFlags();
         }

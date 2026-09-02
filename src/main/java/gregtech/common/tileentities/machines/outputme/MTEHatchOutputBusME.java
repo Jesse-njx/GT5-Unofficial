@@ -28,6 +28,7 @@ import com.glodblock.github.common.item.ItemFluidVoidStorageCell;
 
 import appeng.api.AEApi;
 import appeng.api.config.Actionable;
+import appeng.api.exceptions.AppEngException;
 import appeng.api.implementations.IPowerChannelState;
 import appeng.api.networking.IGridNode;
 import appeng.api.networking.events.MENetworkChannelsChanged;
@@ -48,6 +49,8 @@ import appeng.items.storage.ItemVoidStorageCell;
 import appeng.me.GridAccessException;
 import appeng.me.helpers.AENetworkProxy;
 import appeng.me.helpers.IGridProxyable;
+import appeng.me.storage.ItemCellInventory;
+import appeng.me.storage.ItemCellInventoryHandler;
 import appeng.util.item.AEItemStack;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -213,10 +216,15 @@ public class MTEHatchOutputBusME extends MTEHatchOutputBus implements IPowerChan
             this.isRecipeCheck = isRecipeCheck;
             if (isRecipeCheck && shouldCheckCell()) {
                 provider.flushCachedStack();
-                cell = AEApi.instance()
-                    .registries()
-                    .cell()
-                    .getCellInventory(getCellStack().copy(), getISaveProvider(), getChannel());
+                try {
+                    cell = new ItemCellInventoryHandler(new ItemCellInventory(getCellStack().copy(), $ -> {}) {
+
+                        @Override
+                        protected void saveChanges() {}
+                    });
+                } catch (AppEngException e) {
+                    // :p
+                }
             }
             updateFlags();
         }
